@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>My love</title>
+<style>
+:root{
+  --bg: #000;
+  --heart: #ff2d6d;
+  --draw-time: 2.6s;
+  --explode-duration: 0.9s;
+  --delay-after-draw: 1.5s;
+  --name-delay: calc(var(--draw-time) + var(--delay-after-draw));
+  --throb-duration: 1.2s;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+}
+
+/* container for all heart elements */
+.heartContainer {
+  position: relative;
+  width: min(520px, 84vw);
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.throbGroup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+}
+
+svg.main-svg { width:100%; height:100%; display:block; overflow:visible; }
+
+/* Heart path animations */
+.path {
+  fill: none;
+  stroke: var(--heart);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  filter: drop-shadow(0 0 18px rgba(255,45,109,0.25));
+  animation: trace var(--draw-time) linear forwards;
+}
+
+.glint {
+  fill: none;
+  stroke: rgba(255,255,255,0.85);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  mix-blend-mode: screen;
+  animation: glintAnim 1s ease forwards;
+  animation-delay: var(--draw-time); /* starts right after heart draw */
+  transform-origin: center center;
+  opacity: 0;
+}
+
+@keyframes trace{
+  0%   { stroke-dashoffset: 2000; opacity: 0; }
+  8%   { opacity: 1; }
+  88%  { stroke-dashoffset: 40; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes glintAnim {
+  0% {
+    stroke-dashoffset: 2000;
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  30% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+  60% {
+    stroke-dashoffset: 200;
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+/* Heart pulse animation applied only to heart */
+.heartPulse {
+  animation: heartPulse var(--throb-duration) ease-in-out calc(var(--name-delay)) infinite alternate;
+  transform-origin: center;
+}
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* Explosion & particles */
+.explosion {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation: reveal 0.01s linear forwards;
+  animation-delay: calc(var(--draw-time) + var(--delay-after-draw));
+}
+@keyframes reveal { to { opacity: 1; } }
+
+.p {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--heart);
+  transform-origin: center;
+  opacity: 0;
+  box-shadow: 0 0 8px var(--heart), 0 0 14px rgba(255,45,109,0.55);
+  animation: particleMove var(--explode-duration) cubic-bezier(.08,.8,.2,1) forwards;
+}
+@keyframes particleMove {
+  0% { transform: translate(-50%,-50%) scale(1); opacity:1; filter: blur(0); }
+  70% { opacity:0.95; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.15); opacity:0; filter: blur(2px); }
+}
+
+.flash {
+  position:absolute; top:50%; left:50%;
+  width:18px; height:18px;
+  transform:translate(-50%,-50%) scale(0.3);
+  border-radius:50%;
+  background: radial-gradient(circle at 35% 35%, #fff8, var(--heart) 40%, transparent 70%);
+  box-shadow:0 0 42px 12px rgba(255,45,109,0.18);
+  opacity:0;
+  animation: flashPop 0.55s ease-out forwards;
+  animation-delay: calc(var(--draw-time) + var(--delay-after-draw));
+}
+@keyframes flashPop {
+  0%{opacity:0; transform:translate(-50%,-50%) scale(0.5)}
+  20%{opacity:1; transform:translate(-50%,-50%) scale(1.6)}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(3.2)}
+}
+
+/* Small spark pulse */
+.spark {
+  position: absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  display: flex; align-items:center; justify-content:center;
+  pointer-events:none;
+  opacity:0;
+  animation: sparkAppear 0.3s linear calc(var(--draw-time) + 1s) forwards;
+}
+.spark::before {
+  content:"";
+  width:20px; height:20px;
+  background: radial-gradient(circle, #fff8 0%, #ff2d6d 40%, transparent 80%);
+  border-radius:50%;
+  transform: scale(0.2);
+  animation: sparkPulse 1.2s ease-in-out calc(var(--draw-time) + 1s) forwards;
+}
+@keyframes sparkAppear{ to{opacity:1} }
+@keyframes sparkPulse{
+  0%{transform:scale(0.2); opacity:0;}
+  20%{opacity:1;}
+  50%{transform:scale(1.8); opacity:1;}
+  100%{transform:scale(0.2); opacity:0;}
+}
+
+/* Pink heart sparks after name */
+.pinkSparks svg{
+  position:absolute; top:50%; left:50%;
+  width:100%; height:100%;
+  transform:translate(-50%,-50%) scale(0.2);
+  fill:none;
+  stroke:#ff4db8;
+  stroke-width:4;
+  opacity:0;
+  animation-fill-mode:forwards;
+}
+.pinkHeart1 { animation: pinkHeart1Anim 1s ease-out calc(var(--draw-time) + 2.8s) forwards; }
+.pinkHeart2 { animation: pinkHeart2Anim 1s ease-out calc(var(--draw-time) + 3.5s) forwards; }
+.pinkHeart3 { animation: pinkHeart3Anim 1s ease-out calc(var(--draw-time) + 4.2s) forwards; }
+@keyframes pinkHeart1Anim {0%{opacity:0; transform:translate(-50%,-50%) scale(0.2);}50%{opacity:1; transform:translate(-50%,-50%) scale(1);}100%{opacity:0; transform:translate(-50%,-50%) scale(1.8);} }
+@keyframes pinkHeart2Anim {0%{opacity:0; transform:translate(-50%,-50%) scale(0.2);}50%{opacity:1; transform:translate(-50%,-50%) scale(1.2);}100%{opacity:0; transform:translate(-50%,-50%) scale(2.2);} }
+@keyframes pinkHeart3Anim {0%{opacity:0; transform:translate(-50%,-50%) scale(0.2);}50%{opacity:1; transform:translate(-50%,-50%) scale(1.5);}100%{opacity:0; transform:translate(-50%,-50%) scale(3);} }
+
+.name{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff;
+  font-size:2.2rem;
+  font-family:"Poppins",sans-serif;
+  text-shadow:0 0 10px #ff2d6d;
+  opacity:0;
+  animation: nameAppear 1s ease forwards, namePulse 1.2s ease-in-out calc(var(--draw-time) + 1.2s) infinite alternate;
+}
+@keyframes nameAppear {0%{opacity:0; transform:translate(-50%,-50%) scale(0.8);}100%{opacity:1; transform:translate(-50%,-50%) scale(1);} }
+@keyframes namePulse {0%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}100%{transform:translate(-50%,-50%) scale(1);} }
+</style>
+</head>
+<body>
+  <div class="heartContainer">
+    <div class="throbGroup">
+      <!-- Heart SVG -->
+      <svg class="main-svg heartPulse" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="halo" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="rgba(255,45,109,0.45)"/>
+            <stop offset="45%" stop-color="rgba(255,45,109,0.18)"/>
+            <stop offset="80%" stop-color="rgba(255,45,109,0.06)"/>
+            <stop offset="100%" stop-color="rgba(255,45,109,0)"/>
+          </radialGradient>
+          <filter id="haloBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="12"/>
+          </filter>
+        </defs>
+        <g filter="url(#haloBlur)" opacity="1">
+          <path fill="url(#halo)" d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/>
+        </g>
+        <path class="path" d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/>
+        <path class="glint" d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/>
+      </svg>
+
+      <!-- Small spark pulse -->
+      <div class="spark"></div>
+
+      <!-- Name -->
+      <div class="name">Gaera&nbsp;Gumban</div>
+
+      <!-- Pink heart sparks -->
+      <div class="pinkSparks">
+        <svg class="pinkHeart1" viewBox="0 0 512 512"><path d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/></svg>
+        <svg class="pinkHeart2" viewBox="0 0 512 512"><path d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/></svg>
+        <svg class="pinkHeart3" viewBox="0 0 512 512"><path d="M256 472 C90 324 24 236 24 152 C24 88 72 48 136 48 C184 48 224 76 256 128 C288 76 328 48 376 48 C440 48 488 88 488 152 C488 236 422 324 256 472Z"/></svg>
+      </div>
+    </div>
+
+    <!-- Explosion stays outside -->
+    <div class="explosion">
+      <div class="flash"></div>
+      <i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i>
+      <i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i>
+      <i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i>
+      <i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i>
+      <span class="trail" style="--tx:-46px;--ty:-12px;"></span>
+      <span class="trail" style="--tx:86px;--ty:16px;"></span>
+      <span class="trail" style="--tx:-8px;--ty:108px;"></span>
+    </div>
+  </div>
+</body>
+</html>
